@@ -88,6 +88,72 @@ namespace mebeluveikals
             }
         }
 
+
+
+            private void exportCsvButton_Click(object sender, EventArgs e)
+{
+    var furnitureManager = new FurnitureManager("Data Source=furniture.db");
+    var furnitureList = furnitureManager.ReadFurniture();
+    var filePath = "furniture_export.csv";
+
+    using (var writer = new StreamWriter(filePath))
+    {
+        writer.WriteLine("Name,Description,Price,Height,Width,Length");
+        foreach (var furniture in furnitureList)
+        {
+            writer.WriteLine($"{furniture.Name},{furniture.Description},{furniture.Price},{furniture.Height},{furniture.Width},{furniture.Length}");
+        }
+    }
+
+    MessageBox.Show("CSV fails veiksmīgi eksportēts: " + filePath);
+}
+
+private void importCsvButton_Click(object sender, EventArgs e)
+{
+    var filePath = "furniture_import.csv"; // Aizvietot ar dialoga ceļu, ja nepieciešams
+    if (!File.Exists(filePath))
+    {
+        MessageBox.Show("Importa fails netika atrasts.");
+        return;
+    }
+
+    var furnitureManager = new FurnitureManager("Data Source=furniture.db");
+
+    using (var reader = new StreamReader(filePath))
+    {
+        reader.ReadLine(); // Pārlēkt galvenes rindai
+        while (!reader.EndOfStream)
+        {
+            var line = reader.ReadLine();
+            var values = line.Split(',');
+
+            var name = values[0];
+            var description = values[1];
+            var price = double.Parse(values[2]);
+            var height = int.Parse(values[3]);
+            var width = int.Parse(values[4]);
+            var length = int.Parse(values[5]);
+
+            try
+            {
+                // Mēģinām pievienot jaunu ierakstu
+                furnitureManager.AddFurniture(name, description, price, height, width, length);
+            }
+            catch
+            {
+                // Ja eksistē, tad atjaunojam
+                furnitureManager.DeleteFurnitureByName(name);
+                furnitureManager.AddFurniture(name, description, price, height, width, length);
+            }
+        }
+    }
+
+    MessageBox.Show("Dati no CSV veiksmīgi importēti.");
+}
+
+
+
+
         private void deleteBtn_Click(object sender, EventArgs e)
         {
             furnitureManager.DeleteFurnitureByName(selectProductComboBox.Text);
